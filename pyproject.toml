@@ -381,12 +381,15 @@ override-dependencies = [
   # Remove this line when alibabacloud-tea-openapi lifts the cap.
   "cryptography>=50,<51",
 ]
-exclude-newer = "14 days"
+exclude-newer = "2026-09-18T00:00:00Z"
 # h2: temporary exclude-newer exception for the CVE-2026-71554 (GHSA-6hr6-w5qg-qmwg,
 # request-smuggling) fix in 4.4.1, published 2026-08-03. Remove after 2026-08-17.
 # aiohttp, cryptography: same shape — the advisory fixes are newer than the
 # 14-day window, so the resolver cannot see them without an exception.
-exclude-newer-package = { vercel = false, nemo-relay = false, huggingface_hub = false, h2 = false, aiohttp = false, cryptography = false }
+# uv requires an RFC 3339 timestamp here, not a boolean — each override is
+# pinned to "now" so the resolver can see these packages' latest (security-fix)
+# releases without lifting the 14-day quarantine for anything else.
+exclude-newer-package = { vercel = "2026-10-02T00:00:00Z", nemo-relay = "2026-10-02T00:00:00Z", huggingface_hub = "2026-10-02T00:00:00Z", h2 = "2026-10-02T00:00:00Z", aiohttp = "2026-10-02T00:00:00Z", cryptography = "2026-10-02T00:00:00Z" }
 
 [tool.setuptools]
 # Top-level single-file modules (not packages). Without this, uv2nix's
