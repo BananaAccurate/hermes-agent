@@ -8,16 +8,15 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
-exclude-newer-span = "P14D"
+exclude-newer = "2026-09-18T00:00:00Z"
 
 [options.exclude-newer-package]
-vercel = false
-aiohttp = false
-cryptography = false
-nemo-relay = false
-huggingface-hub = false
-h2 = false
+vercel = "2026-10-02T00:00:00Z"
+aiohttp = "2026-10-02T00:00:00Z"
+cryptography = "2026-10-02T00:00:00Z"
+nemo-relay = "2026-10-02T00:00:00Z"
+huggingface-hub = "2026-10-02T00:00:00Z"
+h2 = "2026-10-02T00:00:00Z"
 
 [manifest]
 overrides = [
