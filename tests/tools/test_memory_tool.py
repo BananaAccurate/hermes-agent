@@ -8,6 +8,8 @@ from tools.memory_tool import (
     MemoryStore,
     memory_tool,
     _scan_memory_content,
+    _tombstone_for,
+    ENTRY_DELIMITER,
 )
 
 
@@ -455,6 +457,41 @@ class TestExternalDriftGuard:
 
         result = store.replace("user", "Some preference", "New preference.")
         assert result["success"] is False
+        assert path.stat().st_size == original_size
+
+    def test_drift_detected_alongside_a_live_tombstone(self, store):
+        """Signal #1 (round-trip mismatch) must still fire when a tombstone
+        marker (issue #85858) is also present on disk.
+
+        A prior version of the tombstone-aware drift check built BOTH sides
+        of the round-trip comparison from the same already-tombstone-stripped,
+        already-.strip()'d list, making the comparison vacuously equal and
+        silently disabling signal #1 for every file that happens to carry a
+        tombstone. This guards that the fix for #85858 didn't regress the
+        #26045 protection: a non-tombstone entry with extra internal
+        whitespace (which .strip() would normalize away on round-trip) must
+        still be caught as drift even with a live, well-formed tombstone
+        entry elsewhere in the same file.
+        """
+        store.add("memory", "User likes brevity.")
+        path = store._path_for("memory")
+        # A live tombstone (as remove()/replace() would leave for one round)
+        # as its OWN entry, plus a separate entry with surrounding whitespace
+        # that would be stripped away on re-serialization — small enough to
+        # stay well under char_limit, so only signal #1 can be responsible.
+        tomb = _tombstone_for("some removed entry")
+        drifted = ENTRY_DELIMITER.join([
+            "User likes brevity.",
+            tomb,
+            "  entry with surrounding whitespace  ",
+        ])
+        path.write_text(drifted, encoding="utf-8")
+        original_size = path.stat().st_size
+
+        result = store.replace("memory", "User likes", "User prefers concise.")
+
+        assert result["success"] is False
+        assert "drift_backup" in result
         assert path.stat().st_size == original_size
 
 
